@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hertz Customer Feedback</title>
+    <style>
+        /* Hertz Branding: Yellow, Black, and White */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f4f4; padding: 20px; color: #333; }
+        .card { max-width: 450px; margin: auto; background: white; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; border-top: 10px solid #ffcc00; }
+        .header { padding: 25px 20px; text-align: center; background: #fff; }
+        .header h2 { margin: 0; font-size: 22px; text-transform: uppercase; letter-spacing: 1px; }
+        .header p { margin: 5px 0 0; color: #666; font-size: 14px; }
+        .content { padding: 0 25px 25px 25px; }
+        
+        label { display: block; margin-top: 20px; font-weight: bold; font-size: 13px; text-transform: uppercase; color: #555; }
+        select, textarea, button { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; }
+        textarea { height: 70px; resize: none; font-family: inherit; }
+        
+        /* Buttons */
+        button { background: #000; color: #fff; border: none; font-weight: bold; cursor: pointer; margin-top: 25px; transition: 0.3s; }
+        button:disabled { background: #999; cursor: not-allowed; }
+        .copy-btn { background: #ffcc00; color: #000; margin-top: 15px; }
+        .maps-btn { background: #34A853; color: white; display: none; margin-top: 10px; }
+        
+        /* Result Area */
+        #result-area { display: none; margin-top: 25px; padding: 15px; background: #fffde7; border-radius: 10px; border: 1px dashed #ffcc00; }
+        #review-text { background: transparent; border: none; font-style: italic; color: #444; padding: 0; height: auto; min-height: 50px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="header">
+        <h2>Hertz Lot Assistance</h2>
+        <p>Tell us how we did at the car lot today</p>
+    </div>
+
+    <div class="content">
+        <label>How fast was the help?</label>
+        <select id="speed">
+            <option value="5">Instantly (5/5)</option>
+            <option value="4">Quick (4/5)</option>
+            <option value="3">It was okay (3/5)</option>
+        </select>
+
+        <label>Staff friendliness outside?</label>
+        <select id="service">
+            <option value="5">Excellent (5/5)</option>
+            <option value="4">Good (4/5)</option>
+            <option value="3">Average (3/5)</option>
+        </select>
+
+        <label>What did we help you with?</label>
+        <textarea id="extra" placeholder="e.g. CarPlay setup, Bluetooth, car features, or general doubts..."></textarea>
+
+        <button id="gen-btn" onclick="generateReview()">Create My Draft Review</button>
+
+        <div id="result-area">
+            <p style="margin:0 0 10px 0; font-size: 13px; font-weight: bold;">Step 1: Copy this text</p>
+            <textarea id="review-text" readonly></textarea>
+            
+            <button class="copy-btn" id="copy-btn" onclick="copyText()">📋 Copy Draft</button>
+            
+            <p id="step2-msg" style="display:none; margin:15px 0 10px 0; font-size: 13px; font-weight: bold;">Step 2: Paste on Google Maps</p>
+            <button class="maps-btn" id="maps-btn" onclick="openMaps()">📍 Open Google Maps</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function generateReview() {
+        const btn = document.getElementById('gen-btn');
+        btn.innerText = "Generating Draft...";
+        btn.disabled = true;
+        
+        const payload = {
+            speed: document.getElementById('speed').value,
+            service: document.getElementById('service').value,
+            quality: 5, // We keep quality high to protect Hertz reputation
+            extra: document.getElementById('extra').value
+        };
+
+        try {
+            // --- UPDATE THIS: Replace with your Render URL ---
+            const response = await fetch('https://reviews-generator.onrender.com', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            
+            document.getElementById('review-text').value = data.review;
+            document.getElementById('result-area').style.display = 'block';
+            btn.innerText = "Try Another Version";
+            btn.disabled = false;
+        } catch (e) {
+            alert("Error: Make sure your Render server is awake!");
+            btn.innerText = "Create My Draft Review";
+            btn.disabled = false;
+        }
+    }
+
+    function copyText() {
+        const textArea = document.getElementById('review-text');
+        textArea.select();
+        document.execCommand('copy');
+        
+        document.getElementById('copy-btn').innerText = "Text Copied! ✓";
+        document.getElementById('step2-msg').style.display = 'block';
+        document.getElementById('maps-btn').style.display = 'block';
+    }
+
+    function openMaps() {
+        // --- UPDATE THIS: Replace with your Hertz Google Maps Link ---
+        const mapsLink = "https://search.google.com/local/writereview?placeid=ChIJK4afT7cRZ0gReYVQiCWpjlc";
+        window.open(mapsLink, '_blank');
+    }
+</script>
+
+</body>
+</html>
