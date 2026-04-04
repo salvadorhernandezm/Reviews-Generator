@@ -1,5 +1,6 @@
 import os
 import google.generativeai as genai
+print("GENAI VERSION:", genai.__version__)
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
