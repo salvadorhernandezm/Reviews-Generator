@@ -3,17 +3,17 @@ import google.generativeai as genai
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-# Force stable API version
+# 1. FORZADO TOTAL DE VERSIÓN (Antes de configurar nada)
 os.environ["GOOGLE_GENERATIVE_AI_API_VERSION"] = "v1"
 
 app = Flask(__name__)
 CORS(app)
 
-# 1. Setup API Key
+# 2. CONFIGURACIÓN
 genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 
-# 2. Setup Model (1.5-flash is the current standard)
-model = genai.GenerativeModel('gemini-1.5-flash')
+# 3. EL MODELO (Usamos Pro para máxima estabilidad)
+model = genai.GenerativeModel('gemini-pro')
 
 MY_NAME = "Salvador"
 
@@ -21,24 +21,19 @@ MY_NAME = "Salvador"
 def generate_review():
     try:
         data = request.json
-        if not data:
-            return jsonify({"review": "No data received"}), 400
-
-        # Extract values
         speed = data.get('speed', 5)
         service = data.get('service', 5)
         extra = data.get('extra', "")
 
-        # Single-line prompt to avoid triple-quote syntax errors
-        prompt = f"Write a 5-star Google review for Hertz. {MY_NAME} helped with the car lot/tech. Speed: {speed}/5, Service: {service}/5. Note: {extra}. Rules: Mention {MY_NAME}, no emojis, max 2 sentences, be very positive."
+        # Prompt simple en una línea para evitar errores de comillas
+        prompt = f"Write a professional 5-star review for Hertz. {MY_NAME} assisted me with the car and tech. Speed: {speed}/5, Service: {service}/5. Note: {extra}. Rules: Mention {MY_NAME}, no emojis, 2 sentences max."
 
         response = model.generate_content(prompt)
         
         if response and response.text:
-            clean_review = response.text.strip().replace('"', '')
-            return jsonify({"review": clean_review})
+            return jsonify({"review": response.text.strip().replace('"', '')})
         else:
-            return jsonify({"review": "AI Error: Empty response"}), 500
+            return jsonify({"review": "Error: IA vacía"}), 500
 
     except Exception as e:
         print(f"CRASH ERROR: {str(e)}")
