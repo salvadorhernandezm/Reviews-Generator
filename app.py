@@ -10,9 +10,11 @@ CORS(app)
 # We use os.environ to keep your key secret. 
 # Make sure "GOOGLE_API_KEY" is set in your Render Environment Variables!
 api_key = os.environ.get("GOOGLE_API_KEY")
-genai.configure(api_key=api_key)
+genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 
-# We use 'gemini-pro' because it is the most stable for older libraries
+# Add this line to force the stable version
+os.environ["GOOGLE_GENERATIVE_AI_API_VERSION"] = "v1" 
+
 model = genai.GenerativeModel('gemini-pro')
 
 # Your name for the reviews
