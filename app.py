@@ -1,40 +1,36 @@
 import os
+import google.generativeai as genai
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from google import genai
 
-# -----------------------------
-# Flask setup
-# -----------------------------
+print("GENAI VERSION:", genai.__version__)
+
 app = Flask(__name__)
 CORS(app)
 
-# -----------------------------
+# -----------------------
 # API KEY
-# -----------------------------
+# -----------------------
 API_KEY = os.environ.get("GOOGLE_API_KEY")
 
 if not API_KEY:
-    raise ValueError("GOOGLE_API_KEY no está definida")
+    raise ValueError("GOOGLE_API_KEY no definida")
 
-# Cliente Gemini (API v1 real)
-client = genai.Client(api_key=API_KEY)
+genai.configure(api_key=API_KEY)
 
-# Nombre del empleado
+# ⚠️ CREAR MODELO UNA SOLA VEZ (IMPORTANTE)
+model = genai.GenerativeModel(
+    model_name="models/gemini-1.5-flash"
+)
+
 MY_NAME = "Salvador"
 
 
-# -----------------------------
-# Health check route
-# -----------------------------
 @app.route("/")
 def home():
     return "API running ✅"
 
 
-# -----------------------------
-# Generate Review Endpoint
-# -----------------------------
 @app.route("/generate_review", methods=["POST"])
 def generate_review():
     try:
@@ -55,24 +51,17 @@ def generate_review():
             f"No emojis. No quotation marks."
         )
 
-        # 🔥 Llamada correcta API v1
-        response = client.models.generate_content(
-            model="gemini-1.5-flash",
-            contents=prompt,
-        )
+        response = model.generate_content(prompt)
 
-        review_text = response.text.strip().replace('"', "")
-
-        return jsonify({"review": review_text})
+        return jsonify({
+            "review": response.text.strip().replace('"', '')
+        })
 
     except Exception as e:
-        print(f"DEBUG ERROR: {str(e)}")
-        return jsonify({"review": f"Error del Servidor: {str(e)}"}), 500
+        print("DEBUG ERROR:", str(e))
+        return jsonify({"review": str(e)}), 500
 
 
-# -----------------------------
-# Run local
-# -----------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
