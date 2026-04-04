@@ -1,65 +1,68 @@
 import os
+
+# CRITICAL FIX: This environment variable MUST be set BEFORE importing the AI library
+os.environ["GOOGLE_GENERATIVE_AI_API_VERSION"] = "v1"
+
+import google.generativeai as genai
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import google.generativeai as genai
 
 app = Flask(__name__)
 CORS(app)
 
-# --- CONFIGURATION ---
-# We use os.environ to keep your key secret. 
-# Make sure "GOOGLE_API_KEY" is set in your Render Environment Variables!
+# 1. Setup API Key (Make sure this is in your Render Environment Variables!)
 api_key = os.environ.get("GOOGLE_API_KEY")
-genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
+genai.configure(api_key=api_key)
 
-# Add this line to force the stable version
-os.environ["GOOGLE_GENERATIVE_AI_API_VERSION"] = "v1" 
+# 2. Setup Model (Using the full 'models/' path to avoid 404 errors)
+model = genai.GenerativeModel('models/gemini-pro')
 
-model = genai.GenerativeModel('gemini-pro')
-
-# Your name for the reviews
 MY_NAME = "Salvador"
 
 @app.route('/generate_review', methods=['POST'])
 def generate_review():
     try:
-        # Get data from the Netlify frontend
+        # Get data from Netlify
         data = request.json
+        if not data:
+            return jsonify({"review": "Error: No data received"}), 400
+
         speed = data.get('speed', 5)
         service = data.get('service', 5)
         quality = data.get('quality', 5)
         extra = data.get('extra', "")
 
-        # Optimized Prompt for Hertz Outdoor Service
+        # Personalized Prompt
         prompt = f"""
         Write a short Google Maps review for Hertz. 
         The customer was assisted outside at the car lot by {MY_NAME}.
 
         CONTEXT:
-        - {MY_NAME} helped with: car issues, Bluetooth/CarPlay/phone sync, or general car questions.
+        - {MY_NAME} helped with: car issues, Bluetooth/CarPlay, or general questions.
         - Ratings (1-5): Speed {speed}, Service {service}, Quality {quality}.
         - Customer note: "{extra}"
 
         STRICT RULES:
-        1. MENTION {MY_NAME}: Every review MUST mention {MY_NAME} by name (e.g. "Thanks to {MY_NAME} for...", "{MY_NAME} at the lot was great").
-        2. NO EMOJIS: Do not use any emojis.
-        3. BRAND ADVOCACY: Always stay positive towards Hertz.
-        4. NO CORPORATE CLICHÉS: Use natural phrases like "super helpful" or "sorted me out."
-        5. REALISM: Max 2 sentences. Use natural "on-the-go" English.
-        6. NO NUMBERS: Do not mention numerical stars (like 5/5) in the text.
+        1. MENTION {MY_NAME} by name.
+        2. NO EMOJIS.
+        3. BRAND ADVOCACY: Stay positive towards Hertz.
+        4. REALISM: Max 2 sentences. Natural English.
+        5. NO NUMBERS: Don't mention '5/5' or 'stars' in the text.
         """
 
         # Generate the content
         response = model.generate_content(prompt)
         
-        # Clean the text (remove quotes if the AI adds them)
+        # Safety check for the response
+        if not response or not response.text:
+            return jsonify({"review": "AI was unable to generate text. Please try again."}), 500
+
         clean_review = response.text.strip().replace('"', '')
 
-        # Return the JSON that index.html is expecting
         return jsonify({"review": clean_review})
 
     except Exception as e:
-        # This will show the exact error in your Render Logs
+        # This logs the error to your Render dashboard
         print(f"CRASH ERROR: {str(e)}")
         return jsonify({"review": f"AI Error: {str(e)}"}), 500
 
