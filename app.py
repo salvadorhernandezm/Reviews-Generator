@@ -1,18 +1,21 @@
 import os
-import google.generativeai as genai
-genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import google.generativeai as genai
 
 app = Flask(__name__)
 CORS(app)
 
 # --- CONFIGURATION ---
-# 1. Replace with your NEW API Key from Google AI Studio
-genai.configure(api_key="AIzaSyDoS-gR7HItiu419NcYmk241F79PE4gTsE")
+# We use os.environ to keep your key secret. 
+# Make sure "GOOGLE_API_KEY" is set in your Render Environment Variables!
+api_key = os.environ.get("GOOGLE_API_KEY")
+genai.configure(api_key=api_key)
+
+# We use 'gemini-pro' because it is the most stable for older libraries
 model = genai.GenerativeModel('gemini-pro')
 
-# 2. Put your name here so the AI always includes you
+# Your name for the reviews
 MY_NAME = "Salvador"
 
 @app.route('/generate_review', methods=['POST'])
@@ -38,7 +41,7 @@ def generate_review():
         STRICT RULES:
         1. MENTION {MY_NAME}: Every review MUST mention {MY_NAME} by name (e.g. "Thanks to {MY_NAME} for...", "{MY_NAME} at the lot was great").
         2. NO EMOJIS: Do not use any emojis.
-        3. BRAND ADVOCACY: Always stay positive. Frame it as: "{MY_NAME} makes Hertz the best choice here."
+        3. BRAND ADVOCACY: Always stay positive towards Hertz.
         4. NO CORPORATE CLICHÉS: Use natural phrases like "super helpful" or "sorted me out."
         5. REALISM: Max 2 sentences. Use natural "on-the-go" English.
         6. NO NUMBERS: Do not mention numerical stars (like 5/5) in the text.
@@ -54,7 +57,7 @@ def generate_review():
         return jsonify({"review": clean_review})
 
     except Exception as e:
-        # If something crashes, this shows up in your Render Logs
+        # This will show the exact error in your Render Logs
         print(f"CRASH ERROR: {str(e)}")
         return jsonify({"review": f"AI Error: {str(e)}"}), 500
 
