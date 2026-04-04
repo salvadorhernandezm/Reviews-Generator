@@ -1,4 +1,6 @@
+import os
 import google.generativeai as genai
+genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
@@ -42,11 +44,18 @@ def generate():
     """
 
     try:
+        data = request.json
+        prompt = f"Create a short 5-star review for Hertz. Speed: {data['speed']}, Service: {data['service']}, Extra: {data['extra']}"
+        
         response = model.generate_content(prompt)
-        clean_text = response.text.strip().replace('"', '')
-        return jsonify({"review": clean_text})
+        
+        return jsonify({"review": response.text})
+
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        # This will print the EXACT error in your Render Logs
+        print(f"CRASH ERROR: {str(e)}") 
+        return jsonify({"review": f"AI Error: {str(e)}"}), 500
+
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)
