@@ -12,7 +12,6 @@ MY_NAME = "Salvador"
 
 # ✅ WORKING MODEL (2026)
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent"
-)
 
 def extract_text(result):
     try:
