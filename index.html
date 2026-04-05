@@ -25,7 +25,7 @@
         
         /* Result Area */
         #result-area { display: none; margin-top: 25px; padding: 15px; background: #fffde7; border-radius: 10px; border: 1px dashed #ffcc00; }
-        #review-text { background: transparent; border: none; font-style: italic; color: #444; padding: 0; height: auto; min-height: 50px; }
+        #review-text { background: transparent; border: none; font-style: italic; color: #444; padding: 0; height: auto; min-height: 50px; width: 100%; }
     </style>
 </head>
 <body>
@@ -71,31 +71,44 @@
 <script>
     async function generateReview() {
         const btn = document.getElementById('gen-btn');
+        const resultArea = document.getElementById('result-area');
+        const reviewTextArea = document.getElementById('review-text');
+        
         btn.innerText = "Generating Draft...";
         btn.disabled = true;
         
         const payload = {
             speed: document.getElementById('speed').value,
             service: document.getElementById('service').value,
-            quality: 5, // We keep quality high to protect Hertz reputation
             extra: document.getElementById('extra').value
         };
 
         try {
-            // --- UPDATE THIS: Replace with your Render URL ---
-            const response = await fetch('https://reviews-generator.onrender.com', {
+            // ✅ URL CON RUTA /generate_review
+            const response = await fetch('https://reviews-generator.onrender.com/generate_review', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(payload)
             });
+
             const data = await response.json();
             
-            document.getElementById('review-text').value = data.review;
-            document.getElementById('result-area').style.display = 'block';
-            btn.innerText = "Try Another Version";
+            // Verificamos si la respuesta contiene un error de cuota o similar
+            if (data.review && (data.review.includes("Error") || data.review.includes("could not generate"))) {
+                alert("Google API is currently at its limit. Please wait 60 seconds and try again.");
+                btn.innerText = "Try Again";
+                btn.disabled = false;
+                return;
+            }
+
+            reviewTextArea.value = data.review;
+            resultArea.style.display = 'block';
+            btn.innerText = "Create Another Version";
             btn.disabled = false;
+
         } catch (e) {
-            alert("Error: Make sure your Render server is awake!");
+            console.error("Error:", e);
+            alert("The server is waking up (it takes 30s) or there was a connection error. Please try again.");
             btn.innerText = "Create My Draft Review";
             btn.disabled = false;
         }
@@ -106,13 +119,17 @@
         textArea.select();
         document.execCommand('copy');
         
-        document.getElementById('copy-btn').innerText = "Text Copied! ✓";
+        const copyBtn = document.getElementById('copy-btn');
+        copyBtn.innerText = "Text Copied! ✓";
+        copyBtn.style.background = "#34A853";
+        copyBtn.style.color = "white";
+        
         document.getElementById('step2-msg').style.display = 'block';
         document.getElementById('maps-btn').style.display = 'block';
     }
 
     function openMaps() {
-        // --- UPDATE THIS: Replace with your Hertz Google Maps Link ---
+        // Hertz Dublin Airport Link
         const mapsLink = "https://search.google.com/local/writereview?placeid=ChIJK4afT7cRZ0gReYVQiCWpjlc";
         window.open(mapsLink, '_blank');
     }
