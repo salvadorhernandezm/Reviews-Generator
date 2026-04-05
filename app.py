@@ -22,7 +22,7 @@ MY_NAME = "Salvador"
 # ✅ Gemini Stable API (NO SDK — direct HTTP call)
 GEMINI_URL = (
     "https://generativelanguage.googleapis.com/v1/"
-    "models/gemini-1.5-flash:generateContent"
+    "models/gemini-1.5-flash-latest:generateContent"
 )
 
 # ---------------------------------
