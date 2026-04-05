@@ -11,8 +11,8 @@ CORS(app)
 
 # ---------------------------------
 # Environment variables
-# ---------------------------------
-API_KEY = os.environ.get("GOOGLE_API_KEY")
+# --------------------------------
+API_KEY = os.environ.get("AIzaSyDoS-gR7HItiu419NcYmk241F79PE4gTsE")
 
 if not API_KEY:
     raise ValueError("GOOGLE_API_KEY is not defined")
