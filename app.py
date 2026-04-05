@@ -71,7 +71,7 @@ def generate_review():
         extra = data.get("extra", "")
 
         prompt = (
-            f"Write a natural 2-sentence Google review for Hertz. "
+            f"Write a short customer-style feedback comment about a car rental experience."
             f"Mention that {MY_NAME} provided excellent outdoor service. "
             f"Speed rating: {speed}/5. Service rating: {service}/5. "
             f"Additional info: {extra}. "
