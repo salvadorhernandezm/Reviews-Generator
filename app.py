@@ -1,29 +1,23 @@
 import os
-import google.generativeai as genai
+import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-
-print("GENAI VERSION:", genai.__version__)
 
 app = Flask(__name__)
 CORS(app)
 
-# -----------------------
-# API KEY
-# -----------------------
 API_KEY = os.environ.get("GOOGLE_API_KEY")
 
 if not API_KEY:
     raise ValueError("GOOGLE_API_KEY no definida")
 
-genai.configure(api_key=API_KEY)
-
-# ⚠️ CREAR MODELO UNA SOLA VEZ (IMPORTANTE)
-model = genai.GenerativeModel(
-    model_name="models/gemini-1.5-flash"
-)
-
 MY_NAME = "Salvador"
+
+# ✅ Endpoint v1 FORZADO
+GEMINI_URL = (
+    "https://generativelanguage.googleapis.com/v1/"
+    "models/gemini-1.5-flash:generateContent"
+)
 
 
 @app.route("/")
@@ -35,9 +29,6 @@ def home():
 def generate_review():
     try:
         data = request.json
-
-        if not data:
-            return jsonify({"review": "No se recibieron datos"}), 400
 
         speed = data.get("speed", 5)
         service = data.get("service", 5)
@@ -51,11 +42,27 @@ def generate_review():
             f"No emojis. No quotation marks."
         )
 
-        response = model.generate_content(prompt)
+        payload = {
+            "contents": [
+                {
+                    "parts": [
+                        {"text": prompt}
+                    ]
+                }
+            ]
+        }
 
-        return jsonify({
-            "review": response.text.strip().replace('"', '')
-        })
+        response = requests.post(
+            f"{GEMINI_URL}?key={API_KEY}",
+            json=payload,
+            timeout=30
+        )
+
+        result = response.json()
+
+        review = result["candidates"][0]["content"]["parts"][0]["text"]
+
+        return jsonify({"review": review.strip().replace('"', '')})
 
     except Exception as e:
         print("DEBUG ERROR:", str(e))
