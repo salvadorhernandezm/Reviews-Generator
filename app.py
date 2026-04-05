@@ -11,26 +11,30 @@ CORS(app)
 
 # ---------------------------------
 # Environment variables
-# --------------------------------
-API_KEY = os.environ.get("GOOGLE_API_KEY", "AIzaSyDoS-gR7HItiu419NcYmk241F79PE4gTsE")
+# ---------------------------------
+API_KEY = os.environ.get("GOOGLE_API_KEY")
 
 if not API_KEY:
-    raise ValueError("GOOGLE_API_KEY is not defined")
+    print("⚠️ WARNING: GOOGLE_API_KEY is not defined")
 
 MY_NAME = "Salvador"
 
-# ✅ Force Gemini stable API v1
+# ✅ Gemini Stable API (NO SDK — direct HTTP call)
 GEMINI_URL = (
     "https://generativelanguage.googleapis.com/v1/"
     "models/gemini-1.5-flash:generateContent"
 )
 
 # ---------------------------------
-# Helper: Safe text extraction
+# Helper: Extract text safely
 # ---------------------------------
 def extract_text(result):
     try:
         candidates = result.get("candidates", [])
+
+        if not candidates:
+            print("DEBUG: No candidates returned")
+            return "AI could not generate a response."
 
         for candidate in candidates:
             content = candidate.get("content", {})
@@ -41,14 +45,15 @@ def extract_text(result):
                 if text:
                     return text.strip()
 
-        return "AI could not generate a response."
+        return "AI returned empty content."
 
-    except Exception:
+    except Exception as e:
+        print("DEBUG PARSE ERROR:", str(e))
         return "Error parsing AI response."
 
 
 # ---------------------------------
-# Health check route
+# Health Check Route
 # ---------------------------------
 @app.route("/")
 def home():
@@ -56,10 +61,14 @@ def home():
 
 
 # ---------------------------------
-# Generate review endpoint
+# Generate Review Endpoint
 # ---------------------------------
 @app.route("/generate_review", methods=["POST"])
 def generate_review():
+
+    if not API_KEY:
+        return jsonify({"review": "Server missing API key"}), 500
+
     try:
         data = request.json
 
@@ -70,22 +79,35 @@ def generate_review():
         service = data.get("service", 5)
         extra = data.get("extra", "")
 
-        prompt = (
-            f"Write a short customer-style feedback comment about a car rental experience."
-            f"Mention that {MY_NAME} provided excellent outdoor service. "
-            f"Speed rating: {speed}/5. Service rating: {service}/5. "
-            f"Additional info: {extra}. "
-            f"Do not use emojis. Do not use quotation marks."
-        )
+        # ✅ Stronger prompt = better responses
+        prompt = f"""
+Write a natural customer Google review about a car rental experience.
+
+Requirements:
+- Mention that {MY_NAME} provided excellent outdoor service.
+- Sound human and realistic.
+- 2 sentences maximum.
+- No emojis.
+- No quotation marks.
+
+Ratings:
+Speed: {speed}/5
+Service: {service}/5
+
+Extra customer comments:
+{extra}
+"""
 
         payload = {
             "contents": [
                 {
-                    "parts": [
-                        {"text": prompt}
-                    ]
+                    "parts": [{"text": prompt}]
                 }
-            ]
+            ],
+            "generationConfig": {
+                "temperature": 0.8,
+                "maxOutputTokens": 120
+            }
         }
 
         response = requests.post(
@@ -94,7 +116,12 @@ def generate_review():
             timeout=30
         )
 
+        # DEBUG
+        print("STATUS:", response.status_code)
+
         result = response.json()
+
+        print("RAW GEMINI RESPONSE:", result)
 
         review = extract_text(result)
 
@@ -108,7 +135,7 @@ def generate_review():
 
 
 # ---------------------------------
-# Run locally
+# Local Run
 # ---------------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
