@@ -28,7 +28,7 @@ def generate_review():
 
         # 2. Construir el mensaje para la IA (Corregido para inglés y sin puntajes)
         prompt = (
-            f"Write a short Google review for Hertz. "
+            f"Write a 1-sentece Google review for Hertz. "
             f"Mention that Salvador provided an excellent outdoor service. "
             f"The customer is very happy with the speed and the overall service. "
             f"Additional comments: {extra}. "
