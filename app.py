@@ -26,13 +26,14 @@ def generate_review():
         service = data.get("service", 5)
         extra = data.get("extra", "")
 
-        # 2. Construir el mensaje para la IA
+        # 2. Construir el mensaje para la IA (Corregido para inglés y sin puntajes)
         prompt = (
-            f"Escribe una reseña corta para Google sobre Hertz. "
-            f"Menciona que Salvador dio un excelente servicio afuera (outdoor service). "
-            f"Puntaje de rapidez: {speed}/5, Puntaje de servicio: {service}/5. "
-            f"Comentario adicional: {extra}. "
-            f"Respuesta en español, sin emojis y sin comillas."
+            f"Write a short Google review for Hertz. "
+            f"Mention that Salvador provided an excellent outdoor service. "
+            f"The customer is very happy with the speed and the overall service. "
+            f"Additional comments: {extra}. "
+            f"Write the response ONLY in English, in a natural way, "
+            f"without using scores like 5/5, without emojis, and without quotes."
         )
 
         payload = {
