@@ -1,50 +1,74 @@
 import os
 import requests
+import random
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
-# Esto permite que tu web en Netlify se comunique con Render sin bloqueos
+# Permitir que Netlify se comunique con Render
 CORS(app)
 
-# Configuración de la API (Asegúrate de tener la variable GOOGLE_API_KEY en Render)
+# Configuración de la API desde variables de entorno de Render
 API_KEY = os.environ.get("GOOGLE_API_KEY")
 
-# Esta es la URL exacta que tu cuenta SÍ reconoce:
+# URL del modelo Gemini 2.5 Flash (Versión actualizada 2026)
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 
 @app.route("/", methods=["GET"])
 def home():
-    return "API de Reseñas de Salvador: ONLINE ✅"
+    return "Hertz Review Generator - Salvador Edition ✅"
 
 @app.route("/generate_review", methods=["POST"])
 def generate_review():
     try:
-        # 1. Recibir datos del frontend
+        # 1. Recibir datos del frontend (Netlify)
         data = request.json or {}
-        speed = data.get("speed", 5)
-        service = data.get("service", 5)
+        speed = int(data.get("speed", 5))
+        service = int(data.get("service", 5))
         extra = data.get("extra", "")
 
-        # 2. Construir el mensaje para la IA (Corregido para inglés y sin puntajes)
+        # 2. Lógica de Variedad para que no suenen igual
+        estilos = [
+            "concise and direct", 
+            "friendly and casual", 
+            "professional and brief", 
+            "enthusiastic",
+            "simple and honest"
+        ]
+        estilo_random = random.choice(estilos)
+
+        # 3. Ajustar el tono según el puntaje (Lógica para negativas/positivas)
+        if service <= 2 or speed <= 2:
+            mood = "disappointed and honest about the wait or service"
+            instruction = "Be constructive but mention the delay or issue."
+        elif service == 3 or speed == 3:
+            mood = "neutral and fair"
+            instruction = "Mention it was okay but nothing special."
+        else:
+            mood = f"very satisfied in a {estilo_random} way"
+            instruction = "Highlight Salvador's excellent outdoor service."
+
+        # 4. Construcción del Prompt Dinámico
         prompt = (
-            f"Write a 1-sentece Google review for Hertz. "
-            f"Mention that Salvador provided an excellent outdoor service. "
-            f"The customer is very happy with the speed and the overall service. "
-            f"Additional comments: {extra}. "
-            f"Write the response ONLY in English, in a natural way, "
-            f"without using scores like 5/5, without emojis, and without quotes."
+            f"Write a unique, 1-sentence Google review for Hertz in English. "
+            f"Context: Salvador helped me with the outdoor service. "
+            f"Speed rating: {speed}/5. Service rating: {service}/5. "
+            f"Additional customer comment: '{extra}'. "
+            f"Tone: {mood}. {instruction} "
+            f"CRITICAL: Change the sentence structure, do not start all reviews the same way. "
+            f"Only English. No emojis. No quotes. No star scores in the text."
         )
 
+        # 5. Preparar el paquete (Payload) para Google
         payload = {
             "contents": [{
                 "parts": [{"text": prompt}]
             }]
         }
 
-        print(f"--- 🛰️ ENVIANDO PETICIÓN A GOOGLE ---")
+        print(f"--- 🛰️ ENVIANDO PETICIÓN A GOOGLE (Modelo 2.5) ---")
 
-        # 3. Llamada a Google Gemini
+        # 6. Llamada a la API de Google
         response = requests.post(
             f"{GEMINI_URL}?key={API_KEY}",
             json=payload,
@@ -52,29 +76,27 @@ def generate_review():
             timeout=30
         )
 
-        # 4. LOGS DE RASTREO (Esto verás en Render)
+        # 7. Verificación de Respuesta
         print(f"--- 📡 STATUS CODE GOOGLE: {response.status_code} ---")
         
         if response.status_code != 200:
-            error_msg = response.text
-            print(f"--- ❌ ERROR DE GOOGLE: {error_msg} ---")
-            return jsonify({"review": f"Error de Google: {response.status_code}"}), response.status_code
+            error_data = response.text
+            print(f"--- ❌ ERROR DE GOOGLE: {error_data} ---")
+            return jsonify({"review": "Error generating review. Check logs."}), response.status_code
 
-        # 5. Extraer la reseña
+        # 8. Extraer y limpiar el texto generado
         result = response.json()
         review_text = result["candidates"][0]["content"]["parts"][0]["text"].strip()
 
-        # 🔥 LA PRUEBA REINA: Imprime la reseña en la consola de Render
-        print(f"--- ✅ RESEÑA GENERADA: ---")
-        print(review_text)
-        print(f"---------------------------")
+        print(f"--- ✅ RESEÑA GENERADA: {review_text} ---")
 
         return jsonify({"review": review_text})
 
     except Exception as e:
         print(f"--- 🚨 ERROR CRÍTICO: {str(e)} ---")
-        return jsonify({"review": f"Error del servidor: {str(e)}"}), 500
+        return jsonify({"review": f"Server error: {str(e)}"}), 500
 
 if __name__ == "__main__":
+    # Render usa el puerto 10000 por defecto
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
