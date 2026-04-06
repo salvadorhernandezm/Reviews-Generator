@@ -9,9 +9,9 @@ CORS(app)
 
 # Configuración de la API (Asegúrate de tener la variable GOOGLE_API_KEY en Render)
 API_KEY = os.environ.get("GOOGLE_API_KEY")
-# Cambia esta línea en tu app.py:
-# Úsalo SOLO si el anterior te vuelve a dar 404
-GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+
+# Esta es la URL exacta que tu cuenta SÍ reconoce:
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent"
 
 @app.route("/", methods=["GET"])
 def home():
