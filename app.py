@@ -11,7 +11,7 @@ CORS(app)
 API_KEY = os.environ.get("GOOGLE_API_KEY")
 
 # Esta es la URL exacta que tu cuenta SÍ reconoce:
-GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent"
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 
 @app.route("/", methods=["GET"])
 def home():
