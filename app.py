@@ -50,13 +50,18 @@ def generate_review():
 
         # 4. Construcción del Prompt Dinámico
         prompt = (
-            f"Write a unique, short 1-sentence Google review for Hertz in English. "
-            f"Context: Salvador helped me with the outdoor service. "
-            f"Speed rating: {speed}/5. Service rating: {service}/5. "
-            f"Additional customer comment: '{extra}'. "
-            f"Tone: {mood}. {instruction} "
-            f"CRITICAL: Change the sentence structure, do not start all reviews the same way. "
-            f"Only English. No emojis. No quotes. No star scores in the text."
+            f"Write a very short, 1-sentence Google review in English for Hertz. "
+            f"The goal is to sound like a real tourist, not a bot. "
+            f"Context: Salvador helped with the car delivery/outdoor service. "
+            f"Speed: {speed}/5. Service: {service}/5. "
+            f"User comment: '{extra}'. "
+            f"Style: {estilo_random}. "
+            f"INSTRUCTIONS: "
+            f"1. If the score is high, focus on Salvador being helpful, polite, or explaining the car. "
+            f"2. Use natural, slightly informal English (e.g., 'The guy Salvador', 'Super helpful', 'Quick pick up'). "
+            f"3. Occasional minor typos are okay to look real. "
+            f"4. If 'extra' mentions a specific car or problem, include it naturally. "
+            f"5. NO professional marketing words, NO quotes, NO emojis, NO rates."
         )
 
         # 5. Preparar el paquete (Payload) para Google
