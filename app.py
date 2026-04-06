@@ -8,7 +8,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Configuración de la API (Asegúrate de tener la variable GOOGLE_API_KEY en Render)
-API_KEY = os.environ.get("AIzaSyAc4LDaQjTDt6tIUhEppT1pwPcehEaXRqU")
+API_KEY = os.environ.get("AIzaSyBr2NJDh96dBb3iBfoHyarfq7xisTm7bmQ")
 
 # Esta es la URL exacta que tu cuenta SÍ reconoce:
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent"
