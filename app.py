@@ -50,7 +50,7 @@ def generate_review():
 
         # 4. Construcción del Prompt Dinámico
         prompt = (
-            f"Write a very short, 1-sentence Google review in English for Hertz. "
+            f"Write a  very very short, 1-sentence Google review in English for Hertz. "
             f"The goal is to sound like a real tourist, not a bot. "
             f"Context: Salvador helped with the car delivery/outdoor service. "
             f"Speed: {speed}/5. Service: {service}/5. "
